@@ -1,6 +1,6 @@
-const heatingBeltInfo = require('../components/product/heatingBeltInfo');
-const { formatProductMessage } = require('../utils/messageFormatter');
-const { sendInstagramMessage } = require('../services/instagramService');
+const heatingBeltInfo = require('../product/heatingBeltInfo');
+const { formatProductMessage } = require('../../utils/messageFormatter');
+const { sendInstagramMessage } = require('../../services/instagramService');
 
 async function handleProductInquiry(senderId, messageText) {
   if (messageText.toLowerCase().includes('precio')) {

@@ -1,5 +1,5 @@
-const heatingBeltInfo = require('../components/product/heatingBeltInfo');
-const { sendInstagramMessage } = require('../services/instagramService');
+const heatingBeltInfo = require('../product/heatingBeltInfo');
+const { sendInstagramMessage } = require('../../services/instagramService');
 
 async function presentHeatingBelt(senderId) {
   await sendInstagramMessage(senderId, `¡Descubre nuestro ${heatingBeltInfo.name}!`);
