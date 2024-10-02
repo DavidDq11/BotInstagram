@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 // Instagram API base URL
-const INSTAGRAM_API_URL = 'https://graph.instagram.com/v18.0';
+const INSTAGRAM_API_URL = 'https://graph.instagram.com/v17.0';
 
 // Instagram API client
 const instagramApi = axios.create({
