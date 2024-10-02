@@ -1,7 +1,7 @@
 {
   "name": "telegrambot",
   "version": "1.0.0",
-  "description": "Este proyecto es un bot de Telegram desarrollado en Node.js, diseñado para gestionar reservas, consultar menús y ofrecer recomendaciones personalizadas utilizando la API de Hugging Face. El bot se conecta a una base de datos PostgreSQL para almacenar las reservas y manejar el flujo de datos.",
+  "description": "Instagram Bot deployed on Render",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
