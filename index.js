@@ -2,9 +2,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const { handleProductInquiry } = require('./handlers/productHandler');
-const { presentHeatingBelt } = require('./scenes/heatingBeltScene');
-const { processOrder } = require('./services/orderService');
+const { handleProductInquiry } = require('./src/components/handlers/productHandler');
+const { presentHeatingBelt } = require('./src/components/scenes/heatingBeltScene');
+const { processOrder } = require('./src/services/orderService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
