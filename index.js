@@ -2,6 +2,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const { handleProductInquiry } = require('./handlers/productHandler');
+const { presentHeatingBelt } = require('./scenes/heatingBeltScene');
+const { processOrder } = require('./services/orderService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 // Instagram API base URL
-const INSTAGRAM_API_URL = 'https://graph.instagram.com/v12.0';
+const INSTAGRAM_API_URL = 'https://graph.instagram.com/v18.0';
 
 // Instagram API client
 const instagramApi = axios.create({
@@ -73,10 +76,16 @@ async function handleInstagramMessage(webhookEvent) {
   console.log('New Instagram message:', webhookEvent);
   
   const senderId = webhookEvent.sender.id;
-  const messageText = webhookEvent.message.text;
+  const messageText = webhookEvent.message.text.toLowerCase();
 
   try {
-    await sendInstagramMessage(senderId, `Thanks for your message: "${messageText}"`);
+    if (messageText.includes('cinturón') || messageText.includes('calentador')) {
+      await presentHeatingBelt(senderId);
+    } else if (messageText.includes('comprar')) {
+      await processOrder(senderId, 'heating-belt');
+    } else {
+      await handleProductInquiry(senderId, messageText);
+    }
   } catch (error) {
     console.error('Error handling message:', error);
   }
