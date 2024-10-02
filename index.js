@@ -12,14 +12,14 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(bodyParser.json());
 
-// Instagram API base URL
-const INSTAGRAM_API_URL = 'https://graph.instagram.com/v17.0';
+// Instagram/Facebook Graph API base URL
+const INSTAGRAM_API_URL = 'https://graph.facebook.com/v17.0';
 
 // Instagram API client
 const instagramApi = axios.create({
   baseURL: INSTAGRAM_API_URL,
   params: {
-    access_token: process.env.ACCESS_TOKEN
+    access_token: process.env.ACCESS_TOKEN // Asegúrate que este token esté correctamente configurado
   }
 });
 
@@ -74,9 +74,14 @@ app.post('/webhook', async (req, res) => {
 
 async function handleInstagramMessage(webhookEvent) {
   console.log('New Instagram message:', webhookEvent);
-  
-  const senderId = webhookEvent.sender.id;
-  const messageText = webhookEvent.message.text.toLowerCase();
+
+  const senderId = webhookEvent.sender?.id;
+  const messageText = webhookEvent.message?.text?.toLowerCase();
+
+  if (!senderId || !messageText) {
+    console.error('Invalid sender or message');
+    return;
+  }
 
   try {
     if (messageText.includes('cinturón') || messageText.includes('calentador')) {
@@ -98,13 +103,22 @@ async function handleInstagramChanges(change) {
 
 async function sendInstagramMessage(recipientId, message) {
   try {
-    await instagramApi.post(`/me/messages`, {
+    const response = await instagramApi.post(`/me/messages`, {
       recipient: { id: recipientId },
       message: { text: message }
+    }, {
+      params: {
+        access_token: process.env.ACCESS_TOKEN // Asegúrate de que el access_token esté bien configurado
+      }
     });
-    console.log('Message sent successfully');
+
+    console.log('Message sent successfully:', response.data);
   } catch (error) {
-    console.error('Error sending message:', error);
+    if (error.response) {
+      console.error('Error response:', error.response.data);
+    } else {
+      console.error('Error sending message:', error.message);
+    }
     throw error;
   }
 }
