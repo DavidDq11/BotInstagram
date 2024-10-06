@@ -1,14 +1,19 @@
-const { sendInstagramMessage } = require('./instagramService');
+const Order = require('../database/models/order.js');
+const Customer = require('../database/models/customer.js');
 
-async function processOrder(senderId, productId) {
-  // Aquí iría la lógica real de procesamiento de pedidos
-  console.log(`Procesando orden para el producto ${productId} del usuario ${senderId}`);
-  
-  // Simulación de procesamiento de pedido
-  await sendInstagramMessage(senderId, "¡Gracias por tu pedido! Estamos procesándolo.");
-  // Más lógica de procesamiento...
-  
-  await sendInstagramMessage(senderId, "Tu pedido ha sido confirmado. Te enviaremos los detalles de envío pronto.");
+class OrderService {
+  async createOrder(instagramId, shippingAddress) {
+    const customer = await Customer.findByInstagramId(instagramId);
+    if (!customer) {
+      throw new Error('Customer not found');
+    }
+    
+    return await Order.create(customer.id, shippingAddress);
+  }
+
+  async updateOrderStatus(orderId, status) {
+    return await Order.updateStatus(orderId, status);
+  }
 }
 
-module.exports = { processOrder };
+module.exports = new OrderService();

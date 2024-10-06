@@ -1,25 +1,29 @@
-const axios = require('axios');
+const axios = require('axios'); // Cambiar a require
+const dotenv = require('dotenv'); // Cambiar a require
 
-const INSTAGRAM_API_URL = 'https://graph.instagram.com/v17.0';
+dotenv.config();
 
-const instagramApi = axios.create({
-  baseURL: INSTAGRAM_API_URL,
-  params: {
-    access_token: process.env.ACCESS_TOKEN
-  }
-});
-
-async function sendInstagramMessage(recipientId, message) {
-  try {
-    await instagramApi.post(`/me/messages`, {
-      recipient: { id: recipientId },
-      message: { text: message }
+class InstagramService {
+  constructor() {
+    this.api = axios.create({
+      baseURL: 'https://graph.facebook.com/v17.0',
+      params: {
+        access_token: process.env.INSTAGRAM_ACCESS_TOKEN,
+      },
     });
-    console.log('Message sent successfully');
-  } catch (error) {
-    console.error('Error sending message:', error);
-    throw error;
+  }
+
+  async sendMessage(recipientId, message) {
+    try {
+      await this.api.post(`/me/messages`, {
+        recipient: { id: recipientId },
+        message: { text: message },
+      });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
   }
 }
 
-module.exports = { sendInstagramMessage };
+module.exports = new InstagramService(); // Cambiar a module.exports

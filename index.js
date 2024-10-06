@@ -1,128 +1,55 @@
-// index.js
 const express = require('express');
-const bodyParser = require('body-parser');
-const axios = require('axios');
-const { handleProductInquiry } = require('./src/components/handlers/productHandler');
-const { presentHeatingBelt } = require('./src/components/scenes/heatingBeltScene');
-const { processOrder } = require('./src/services/orderService');
+const dotenv = require('dotenv');
+const messageHandler = require('./src/handlers/messageHandler.js');
+const commentHandler = require('./src/handlers/commentHandler.js'); // Opcional, si también manejarás comentarios
+
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(express.json());
 
-// Middleware
-app.use(bodyParser.json());
-
-// Instagram/Facebook Graph API base URL
-const INSTAGRAM_API_URL = 'https://graph.facebook.com/v17.0';
-
-// Instagram API client
-const instagramApi = axios.create({
-  baseURL: INSTAGRAM_API_URL,
-  params: {
-    access_token: process.env.ACCESS_TOKEN // Asegúrate que este token esté correctamente configurado
-  }
-});
-
-// Health check endpoint for Render
-app.get('/', (req, res) => {
-  res.send('Instagram Bot is running!');
-});
-
-// Webhook verification endpoint
+// Ruta de verificación del webhook de Messenger
 app.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  if (mode && token) {
-    if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
-      console.log('Webhook verified successfully');
-      res.status(200).send(challenge);
-    } else {
-      console.error('Webhook verification failed');
-      res.sendStatus(403);
-    }
+  if (mode && token === process.env.VERIFY_TOKEN) {
+    res.status(200).send(challenge);
   } else {
-    console.error('Missing mode or token');
-    res.sendStatus(400);
+    res.sendStatus(403);
   }
 });
 
-// Webhook event handling endpoint
+// Ruta para manejar los eventos del webhook de Messenger
 app.post('/webhook', async (req, res) => {
-  const body = req.body;
+  const { body } = req;
 
-  try {
-    if (body.object === 'instagram') {
-      for (const entry of body.entry) {
-        if (entry.messaging) {
-          await handleInstagramMessage(entry.messaging[0]);
-        } else if (entry.changes) {
-          await handleInstagramChanges(entry.changes[0]);
+  if (body.object === 'page') { // Messenger usa "page"
+    for (const entry of body.entry) {
+      if (entry.messaging) {
+        for (const messaging of entry.messaging) {
+          await messageHandler.handleMessage(messaging); // Maneja los mensajes de Messenger
         }
       }
-      res.status(200).send('EVENT_RECEIVED');
-    } else {
-      console.warn(`Received unknown object: ${body.object}`);
-      res.sendStatus(404);
+      if (entry.changes) {
+        for (const change of entry.changes) {
+          await commentHandler.handleComment(change); // Opcional para manejar comentarios
+        }
+      }
     }
-  } catch (error) {
-    console.error('Error processing webhook:', error);
-    res.sendStatus(500);
+    res.status(200).send('EVENT_RECEIVED');
+  } else {
+    res.sendStatus(404);
   }
 });
 
-async function handleInstagramMessage(webhookEvent) {
-  console.log('New Instagram message:', webhookEvent);
+// Ruta de verificación del estado de la app
+app.get('/', (req, res) => {
+  res.send('Messenger Bot is running!');
+});
 
-  const senderId = webhookEvent.sender?.id;
-  const messageText = webhookEvent.message?.text?.toLowerCase();
-
-  if (!senderId || !messageText) {
-    console.error('Invalid sender or message');
-    return;
-  }
-
-  try {
-    if (messageText.includes('cinturón') || messageText.includes('calentador')) {
-      await presentHeatingBelt(senderId);
-    } else if (messageText.includes('comprar')) {
-      await processOrder(senderId, 'heating-belt');
-    } else {
-      await handleProductInquiry(senderId, messageText);
-    }
-  } catch (error) {
-    console.error('Error handling message:', error);
-  }
-}
-
-async function handleInstagramChanges(change) {
-  console.log('Instagram account change:', change);
-  // Implement logic for handling various Instagram changes
-}
-
-async function sendInstagramMessage(recipientId, message) {
-  try {
-    const response = await instagramApi.post(`/me/messages`, {
-      recipient: { id: recipientId },
-      message: { text: message }
-    }, {
-      params: {
-        access_token: process.env.ACCESS_TOKEN // Asegúrate de que el access_token esté bien configurado
-      }
-    });
-
-    console.log('Message sent successfully:', response.data);
-  } catch (error) {
-    if (error.response) {
-      console.error('Error response:', error.response.data);
-    } else {
-      console.error('Error sending message:', error.message);
-    }
-    throw error;
-  }
-}
-
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
